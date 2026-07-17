@@ -1,0 +1,121 @@
+/*
+  combobox-cascata (DESIGN.md/EXPERIENCE.md, Sprint Change Proposal 2026-07-13) — self-contido,
+  não depende de AuthForm.css estar importado por quem usa este componente (reaproveitado fora
+  de telas de auth-form nas Stories 3.7/3.8). Mobile-first: overlay de tela cheia por padrão,
+  dropdown inline a partir de 768px (mesmo breakpoint de EXPERIENCE.md § Responsive & Platform).
+*/
+
+.combobox-cascata {
+  position: relative;
+}
+
+.combobox-cascata input {
+  min-height: 44px;
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--rounded-default);
+  font-family: var(--font-family-base);
+  font-size: var(--font-body-size);
+  background: var(--color-paper);
+  color: var(--color-ink-900);
+  box-sizing: border-box;
+}
+
+.combobox-cascata input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* mobile (padrão): overlay de tela cheia — mesmo padrão já usado no Detalhe do Anúncio
+   (position: fixed; inset: 0), fade lento (UX-DR11, keyframe já definida em AuthForm.css) */
+.combobox-cascata__painel {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--color-paper);
+  padding: var(--spacing-6) var(--spacing-gutter);
+  overflow-y: auto;
+  animation: auth-form-fade-in 0.4s ease-out;
+}
+
+.combobox-cascata__fechar {
+  position: absolute;
+  top: var(--spacing-4);
+  right: var(--spacing-gutter);
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-ink-900);
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* campo de busca de verdade, dentro do painel — "campo de busca no topo" (DESIGN.md). Margem
+   superior generosa no mobile pra não ficar embaixo do botão "×" (position: absolute) */
+.combobox-cascata__busca {
+  margin-top: var(--spacing-8);
+}
+
+.combobox-cascata__mensagem {
+  font-size: var(--font-body-size);
+  color: var(--color-grey);
+  margin: var(--spacing-4) 0 0;
+}
+
+.combobox-cascata__lista {
+  list-style: none;
+  margin: var(--spacing-4) 0 0;
+  padding: 0;
+}
+
+.combobox-cascata__opcao {
+  padding: var(--spacing-3);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: var(--font-body-size);
+  color: var(--color-ink-900);
+  cursor: pointer;
+  border-radius: var(--rounded-default);
+}
+
+.combobox-cascata__opcao--ativa {
+  background: var(--color-paper-2);
+}
+
+/* desktop/tablet (≥768px): dropdown inline ancorado logo abaixo do campo, não overlay de tela
+   cheia — célula tem espaço suficiente (grid de filtros/card de formulário), per DESIGN.md */
+@media (min-width: 768px) {
+  .combobox-cascata__painel {
+    position: absolute;
+    inset: auto;
+    top: calc(100% + var(--spacing-1));
+    left: 0;
+    right: 0;
+    z-index: 20;
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--color-line);
+    border-radius: var(--rounded-default);
+    padding: var(--spacing-2);
+  }
+
+  .combobox-cascata__fechar {
+    display: none;
+  }
+
+  .combobox-cascata__busca {
+    margin-top: 0;
+  }
+
+  .combobox-cascata__mensagem {
+    margin-top: var(--spacing-2);
+  }
+
+  .combobox-cascata__lista {
+    margin-top: var(--spacing-1);
+  }
+}

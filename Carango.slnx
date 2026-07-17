@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/backend/" />
+  <Folder Name="/backend/Api/">
+    <Project Path="backend/Api/Carango.Api.csproj" />
+  </Folder>
+  <Folder Name="/backend/Application/">
+    <Project Path="backend/Application/Carango.Application.csproj" />
+  </Folder>
+  <Folder Name="/backend/Domain/">
+    <Project Path="backend/Domain/Carango.Domain.csproj" />
+  </Folder>
+  <Folder Name="/backend/Infrastructure/">
+    <Project Path="backend/Infrastructure/Carango.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/backend/Tests/">
+    <Project Path="backend/Tests/Carango.Tests/Carango.Tests.csproj" />
+  </Folder>
+</Solution>

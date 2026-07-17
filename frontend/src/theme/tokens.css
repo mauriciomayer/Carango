@@ -1,0 +1,79 @@
+/*
+  Design tokens — Carango (DESIGN.md)
+  Source of truth: _bmad-output/planning-artifacts/ux-designs/ux-marketplace-veiculos-2026-07-08/DESIGN.md
+  Do not re-derive these values elsewhere — reference these custom properties.
+
+  Hard contrast rule: --color-gold is only used as text on dark surfaces
+  (--color-ink-900 / --color-ink-700) or as a decorative element (line, icon,
+  border). Never as text over --color-paper / --color-paper-2 — use
+  --color-gold-ink there instead (insufficient contrast otherwise).
+*/
+
+:root {
+  /* Colors */
+  --color-ink-900: #14171f;
+  --color-ink-700: #262b38;
+  --color-ink-line: #383e4c;
+  --color-paper: #f6f3ec;
+  --color-paper-2: #efeae0;
+  --color-line: #dcd5c4;
+  --color-grey: #6b6558;
+  --color-gold: #c9a227;
+  --color-gold-soft: #e9dbaf;
+  --color-gold-ink: #6b5416;
+  --color-ink-muted: #a7a192;
+  --color-error: #8c3b2e;
+  --color-success: #3e6b4f;
+
+  /* Typography */
+  --font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, Arial,
+    sans-serif;
+
+  --font-brand-size: 13px;
+  --font-brand-weight: 700;
+  --font-brand-tracking: 0.22em;
+
+  --font-display-size: 27px;
+  --font-display-weight: 300;
+  --font-display-line-height: 1.28;
+  --font-display-strong-weight: 700;
+
+  --font-body-size: 13px;
+  --font-body-weight: 400;
+  --font-body-line-height: 1.5;
+
+  --font-micro-label-size: 9.5px;
+  --font-micro-label-weight: 700;
+  --font-micro-label-tracking: 0.08em;
+
+  --font-card-title-size: 16px;
+  --font-card-title-weight: 700;
+
+  --font-price-size: 21px;
+  --font-price-weight: 300;
+  --font-price-strong-weight: 700;
+
+  --font-cta-size: 13px;
+  --font-cta-weight: 600;
+  --font-cta-tracking: 0.08em;
+
+  --font-meta-size: 11.5px;
+  --font-meta-weight: 400;
+
+  /* Rounded */
+  --rounded-sm: 2px;
+  --rounded-default: 4px;
+  --rounded-md: 6px;
+  --rounded-lg: 14px;
+  --rounded-full: 9999px;
+
+  /* Spacing */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-gutter: 24px;
+  --spacing-section: 32px;
+}

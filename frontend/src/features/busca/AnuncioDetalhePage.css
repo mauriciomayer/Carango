@@ -1,0 +1,153 @@
+/*
+  Detalhe do Anúncio (Story 3.5) — primeira tela a sair da Busca. Fade lento reaproveita
+  @keyframes auth-form-fade-in (AuthForm.css, UX-DR11) em vez de criar uma nova keyframe pro
+  mesmo efeito. Sem mockup de alta-fidelidade dedicado — construído a partir dos tokens,
+  mesma disciplina de Login/Cadastro/Criar/Editar (só Home/Busca tem mock, DESIGN.md).
+*/
+
+.anuncio-detalhe {
+  /* overlay de tela cheia — achado no code review: a BuscaPage passou a ficar montada por
+     baixo (pra preservar filtros/ordenação/páginas ao voltar), então o Detalhe precisa cobrir
+     a tela inteira visualmente em vez de só ocupar espaço no fluxo normal do documento */
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow-y: auto;
+  background: var(--color-paper);
+  animation: auth-form-fade-in 0.4s ease-out;
+}
+
+.anuncio-detalhe__conteudo {
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: var(--spacing-8);
+}
+
+.anuncio-detalhe--estado {
+  padding: var(--spacing-section) var(--spacing-gutter);
+  text-align: center;
+}
+
+.anuncio-detalhe__voltar {
+  display: block;
+  padding: var(--spacing-3) var(--spacing-gutter) 0;
+}
+
+.anuncio-detalhe__galeria {
+  position: relative;
+  background: var(--color-paper-2);
+}
+
+.anuncio-detalhe__foto {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  display: block;
+  background: var(--color-paper-2);
+}
+
+.anuncio-detalhe__galeria-botao {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--rounded-full);
+  border: none;
+  background: rgba(20, 23, 31, 0.55);
+  color: var(--color-paper);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.anuncio-detalhe__galeria-botao--anterior {
+  left: var(--spacing-3);
+}
+
+.anuncio-detalhe__galeria-botao--proxima {
+  right: var(--spacing-3);
+}
+
+.anuncio-detalhe__galeria-contador {
+  position: absolute;
+  bottom: var(--spacing-2);
+  right: var(--spacing-3);
+  background: rgba(20, 23, 31, 0.55);
+  color: var(--color-paper);
+  font-size: var(--font-meta-size);
+  padding: 2px var(--spacing-2);
+  border-radius: var(--rounded-default);
+}
+
+.anuncio-detalhe__corpo {
+  padding: var(--spacing-4) var(--spacing-gutter) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.anuncio-detalhe__titulo {
+  font-size: var(--font-display-size);
+  font-weight: var(--font-display-weight);
+  line-height: var(--font-display-line-height);
+  color: var(--color-ink-900);
+  margin: 0;
+}
+
+.anuncio-detalhe__preco {
+  font-size: var(--font-price-size);
+  font-weight: var(--font-price-weight);
+  color: var(--color-ink-900);
+  margin: 0;
+}
+
+.anuncio-detalhe__preco strong {
+  font-weight: var(--font-price-strong-weight);
+  color: var(--color-gold-ink);
+}
+
+.anuncio-detalhe__meta {
+  font-size: var(--font-meta-size);
+  color: var(--color-grey);
+  margin: 0;
+}
+
+.anuncio-detalhe__descricao {
+  font-size: var(--font-body-size);
+  line-height: var(--font-body-line-height);
+  color: var(--color-ink-900);
+  white-space: pre-line;
+  margin: var(--spacing-2) 0 0;
+}
+
+/* Desktop (1024px+) — galeria e ficha lado a lado, padrão clássico de página de produto, em vez
+   de empilhados como no mobile. O botão "Voltar" ocupa a linha inteira acima do grid */
+@media (min-width: 1024px) {
+  .anuncio-detalhe__conteudo {
+    max-width: 960px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: var(--spacing-6);
+    align-items: start;
+    padding: 0 0 var(--spacing-8);
+  }
+
+  .anuncio-detalhe__voltar {
+    grid-column: 1 / -1;
+    padding: var(--spacing-4) 0 0;
+  }
+
+  .anuncio-detalhe__galeria {
+    border-radius: var(--rounded-default);
+    overflow: hidden;
+  }
+
+  .anuncio-detalhe__foto {
+    height: 420px;
+  }
+
+  .anuncio-detalhe__corpo {
+    padding: var(--spacing-3) 0 0;
+  }
+}

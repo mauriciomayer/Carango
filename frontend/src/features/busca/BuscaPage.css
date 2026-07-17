@@ -1,0 +1,309 @@
+/*
+  Home/Busca — primeira tela do projeto com mockup de alta-fidelidade dedicado
+  (mockups/hero-search.html, "Direção 2 — Editorial Premium", ver DESIGN.md/EXPERIENCE.md).
+  Hero escuro (--color-ink-900) é um elemento visual novo — todas as telas anteriores usam
+  fundo claro (--color-paper) via AuthForm.css. .listing-card/.empty-state são reaproveitados
+  de MeusAnunciosPanel.css (2ª ocorrência, ainda não a 3ª — sem extração ainda).
+
+  search-filters__grid tem 7 células (o mockup mostra 6) — achado no code review: Versão foi
+  adicionada como 7º campo por decisão do PO, priorizando o texto da AC da story/epics.md sobre
+  o layout exato do mockup. grid-template-columns em 3 colunas deixa a última célula sozinha
+  numa 3ª linha (3+3+1) — aceitável, não centralizado, mas sem quebra de layout.
+
+  achado do usuário em teste manual (2026-07-15): os blocos @media ficavam no TOPO do arquivo,
+  antes das regras incondicionais de mesma especificidade pros mesmos seletores (.search-filters__grid,
+  .busca-page__lista) mais abaixo — em CSS, @media não aumenta especificidade, só adiciona uma
+  condição; entre duas regras de mesma especificidade, a que vem DEPOIS no arquivo vence,
+  independente de qual delas está dentro de @media. Resultado: as regras responsivas (grid
+  auto-fit do filtro, grid de 2/3 colunas da listagem) nunca tinham efeito nenhum, em nenhuma
+  largura de tela — a regra incondicional mais abaixo no arquivo sempre as sobrescrevia. Os
+  blocos @media foram movidos pro FINAL do arquivo (mesmo padrão mobile-first já usado em
+  AuthForm.css) — agora corretamente vêm depois das regras que precisam sobrescrever.
+*/
+
+.busca-page {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.busca-hero {
+  background: var(--color-ink-900);
+  padding: var(--spacing-6) var(--spacing-gutter) var(--spacing-8);
+}
+
+.busca-hero__brandrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-6);
+}
+
+.busca-hero__brand {
+  font-size: var(--font-brand-size);
+  font-weight: var(--font-brand-weight);
+  letter-spacing: var(--font-brand-tracking);
+  text-transform: uppercase;
+  color: var(--color-paper);
+}
+
+.busca-hero__brand span {
+  color: var(--color-gold);
+}
+
+.busca-hero__link {
+  background: none;
+  border: 1px solid var(--color-gold);
+  border-radius: var(--rounded-full);
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-meta-size);
+  font-weight: 600;
+  color: var(--color-gold);
+  cursor: pointer;
+}
+
+.busca-hero__titulo {
+  color: var(--color-paper);
+  font-size: var(--font-display-size);
+  font-weight: var(--font-display-weight);
+  line-height: var(--font-display-line-height);
+  margin: 0 0 var(--spacing-2);
+}
+
+.busca-hero__titulo strong {
+  font-weight: var(--font-display-strong-weight);
+  color: var(--color-gold);
+}
+
+.busca-hero__subtitulo {
+  color: var(--color-ink-muted);
+  font-size: var(--font-body-size);
+  line-height: var(--font-body-line-height);
+  margin: 0 0 var(--spacing-4);
+}
+
+.search-filters {
+  background: var(--color-ink-700);
+  border: 1px solid var(--color-ink-line);
+  border-radius: var(--rounded-md);
+  padding: var(--spacing-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.search-filters__livre input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--color-ink-line);
+  background: transparent;
+  outline: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-body-size);
+  color: var(--color-paper);
+  padding: var(--spacing-1) var(--spacing-1) var(--spacing-2);
+}
+
+.search-filters__livre input::placeholder {
+  color: var(--color-grey);
+}
+
+.search-filters__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--spacing-2);
+}
+
+/* Story 3.7, achado no code review: `.search-filters__grid .combobox-cascata` (Marca/Modelo)
+   reaproveita exatamente a mesma aparência de `.search-filters__item` (Ano/Versão/Preço/Estado/
+   Cidade) — seletor combinado em vez de um bloco quase duplicado, garante que os dois fiquem
+   sempre em sincronia (inclusive `outline: none`, que tinha ficado de fora da primeira versão
+   deste CSS e deixava o anel de foco padrão do navegador aparecer só nos 2 campos novos) */
+.search-filters__item,
+.search-filters__grid .combobox-cascata {
+  border: 1px solid var(--color-ink-line);
+  border-radius: var(--rounded-default);
+  padding: var(--spacing-2) var(--spacing-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.search-filters__rotulo,
+.search-filters__grid .combobox-cascata label {
+  font-size: 9px;
+  letter-spacing: var(--font-micro-label-tracking);
+  text-transform: uppercase;
+  color: var(--color-grey);
+}
+
+.search-filters__item input,
+.search-filters__grid .combobox-cascata input:not(.combobox-cascata__busca) {
+  width: 100%;
+  min-width: 0;
+  min-height: auto;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-meta-size);
+  font-weight: 600;
+  color: var(--color-paper);
+}
+
+.search-filters__item--preco .search-filters__faixa {
+  display: flex;
+  gap: var(--spacing-1);
+}
+
+/* DESIGN.md já antecipa esta variante de combobox-cascata: "mesma borda/canto/fonte do
+   contexto — {colors.line} sobre {colors.paper} no formulário de Criar/Editar Anúncio;
+   {colors.ink-line} sobre {colors.ink-700} no search-filters da Busca". Só o estado FECHADO
+   muda de tema (regras acima) — o painel aberto (dropdown/overlay) continua claro, sempre, via
+   os estilos padrão (não sobrescritos aqui) de ComboboxCascata.css/.tsx; se os defaults claros
+   de lá mudarem no futuro, este contraste escuro-fecha/claro-abre para de valer sem nenhum
+   aviso aqui — comportamento não fixado nem testado neste arquivo */
+
+
+.search-filters__grid .combobox-cascata input:not(.combobox-cascata__busca)::placeholder {
+  color: var(--color-ink-muted);
+}
+
+.search-filters__faixa input {
+  width: 50%;
+  min-width: 0;
+}
+
+/* mobile-first: os dois botões empilhados, full-width — mesmo visual que "Buscar" sozinho já
+   tinha antes de "Limpar filtros" existir aqui (Story de melhoria pós-lançamento) */
+.search-filters__acoes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.search-filters__botao {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold);
+  font-weight: var(--font-cta-weight);
+  font-size: var(--font-cta-size);
+  letter-spacing: var(--font-cta-tracking);
+  text-transform: uppercase;
+  text-align: center;
+  padding: var(--spacing-3);
+  border-radius: var(--rounded-default);
+  cursor: pointer;
+}
+
+/* menos ênfase que "Buscar" (ação primária) — borda discreta em vez de dourada, mesma
+   linguagem "linha fina" já usada em botões secundários do resto do app */
+.search-filters__botao--secundario {
+  border-color: var(--color-ink-line);
+  color: var(--color-paper);
+}
+
+.busca-page__estado {
+  padding: var(--spacing-section) var(--spacing-gutter);
+  text-align: center;
+}
+
+.busca-page__erro {
+  font-size: var(--font-body-size);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+  border-radius: var(--rounded-default);
+  padding: var(--spacing-2) var(--spacing-3);
+  margin: 0 0 var(--spacing-3);
+}
+
+.busca-page__sortrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-4) var(--spacing-gutter) var(--spacing-2);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.busca-page__contagem {
+  font-weight: 600;
+  font-size: var(--font-meta-size);
+  color: var(--color-grey);
+}
+
+.busca-page__ordenacao {
+  font-family: var(--font-family-base);
+  font-weight: 600;
+  font-size: var(--font-meta-size);
+  color: var(--color-ink-900);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.busca-page__lista {
+  padding: 0 var(--spacing-gutter) var(--spacing-8);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Story 3.4 — carregamento incremental: botão "Carregar mais", fim de lista, erro incremental */
+.busca-page__fim-lista {
+  padding: 0 var(--spacing-gutter) var(--spacing-8);
+  text-align: center;
+}
+
+.busca-page__fim-lista--texto {
+  font-size: var(--font-meta-size);
+  color: var(--color-grey);
+  margin: 0;
+}
+
+.busca-page__fim-lista .cta-button {
+  width: 100%;
+}
+
+/* Desktop/tablet — a página ganha bem mais largura; o grid de filtros passa a se auto-ajustar
+   (auto-fit) em vez de ficar preso a 3 colunas fixas, e a lista de resultados vira grid de
+   cartões (mesma regra de .listing-card definida em MeusAnunciosPanel.css). Precisa vir DEPOIS
+   das regras incondicionais acima (ver nota no topo do arquivo) pra realmente sobrescrevê-las. */
+@media (min-width: 768px) {
+  .busca-page {
+    max-width: 900px;
+  }
+
+  .search-filters__grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .busca-page__lista {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-4);
+  }
+
+  /* achado do usuário: no mobile os dois botões ocupam a tela inteira, empilhados (igual
+     "Buscar" já se comportava); a partir daqui viram menores e lado a lado, alinhados à
+     direita — "Buscar" continua a ação primária, "Limpar filtros" fica em segundo plano */
+  .search-filters__acoes {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .search-filters__acoes .search-filters__botao {
+    flex: none;
+    padding: var(--spacing-2) var(--spacing-4);
+  }
+}
+
+@media (min-width: 1024px) {
+  .busca-page {
+    max-width: 1200px;
+  }
+
+  .busca-page__lista {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

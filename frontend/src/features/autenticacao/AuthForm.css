@@ -1,0 +1,205 @@
+/*
+  Estilos compartilhados por CadastroForm e LoginForm — tokens de DESIGN.md
+  (ver frontend/src/theme/tokens.css). Sem mockup de alta-fidelidade para essas
+  telas (só Home/Busca tem mock) — layout construído só a partir dos tokens,
+  mobile-first (375px). Breakpoints de desktop resolvidos em EXPERIENCE.md
+  § Responsive & Platform (768px tablet, 1024px desktop) — ver regras
+  @media no fim deste arquivo.
+*/
+
+@keyframes auth-form-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.auth-form {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: var(--spacing-section) var(--spacing-gutter);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  /* motion: fade lento, sem bounce (EXPERIENCE.md § Interaction Primitives) */
+  animation: auth-form-fade-in 0.4s ease-out;
+}
+
+.auth-form__titulo {
+  font-size: var(--font-display-size);
+  font-weight: var(--font-display-weight);
+  line-height: var(--font-display-line-height);
+  color: var(--color-ink-900);
+  margin: 0;
+}
+
+.auth-form__tipo {
+  border: 1px solid var(--color-line);
+  border-radius: var(--rounded-default);
+  padding: var(--spacing-3);
+  margin: 0;
+  display: flex;
+  gap: var(--spacing-4);
+}
+
+.auth-form__micro-label {
+  font-size: var(--font-micro-label-size);
+  font-weight: var(--font-micro-label-weight);
+  letter-spacing: var(--font-micro-label-tracking);
+  text-transform: uppercase;
+  color: var(--color-grey);
+  padding: 0;
+}
+
+.auth-form__opcao {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--font-body-size);
+  min-height: 44px;
+}
+
+.auth-form__campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.auth-form__campo label {
+  font-size: var(--font-body-size);
+  color: var(--color-ink-900);
+}
+
+.auth-form__campo input {
+  min-height: 44px;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--rounded-default);
+  font-family: var(--font-family-base);
+  font-size: var(--font-body-size);
+  background: var(--color-paper);
+  color: var(--color-ink-900);
+}
+
+.auth-form__campo input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.auth-form__erro-campo {
+  font-size: var(--font-meta-size);
+  color: var(--color-error);
+}
+
+.auth-form__erro-envio {
+  font-size: var(--font-body-size);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+  border-radius: var(--rounded-default);
+  padding: var(--spacing-2) var(--spacing-3);
+  margin: 0;
+}
+
+.auth-form__corpo {
+  font-size: var(--font-body-size);
+  line-height: var(--font-body-line-height);
+  color: var(--color-grey);
+}
+
+/* cta-button — variante contornada em ink-900 (fundo claro); ver DESIGN.md § Components */
+.cta-button {
+  min-height: 44px;
+  padding: var(--spacing-2) var(--spacing-4);
+  border: 1px solid var(--color-ink-900);
+  border-radius: var(--rounded-default);
+  background: transparent;
+  color: var(--color-ink-900);
+  font-size: var(--font-cta-size);
+  font-weight: var(--font-cta-weight);
+  letter-spacing: var(--font-cta-tracking);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.cta-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-form__rodape {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-gutter) var(--spacing-section);
+  text-align: center;
+}
+
+.auth-form__alternar {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--font-body-size);
+  color: var(--color-grey);
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.auth-form__alternar strong {
+  color: var(--color-ink-900);
+  text-decoration: underline;
+}
+
+/* Story 2.8 — grid de fotos existentes em EditarAnuncioForm, com remoção por-foto (confirmação
+   inline, nunca window.confirm() nativo, UX-DR12) */
+.auth-form__fotos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+}
+
+.auth-form__foto-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  width: 96px;
+}
+
+.auth-form__foto-thumb {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border: 1px solid var(--color-line);
+  border-radius: var(--rounded-default);
+}
+
+.auth-form__foto-confirmar {
+  font-size: var(--font-meta-size);
+  color: var(--color-ink-900);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.auth-form__foto-confirmar-acoes {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+/* Desktop (1024px+) — o formulário vira um cartão centralizado na página, com mais respiro
+   vertical, em vez de ocupar a largura inteira da viewport. Borda fina + canto pouco arredondado
+   (sem box-shadow) — mesma linguagem "linha fina, não sombra" já usada no resto do DESIGN.md */
+@media (min-width: 1024px) {
+  .auth-form {
+    max-width: 440px;
+    margin: var(--spacing-8) auto;
+    padding: var(--spacing-8) var(--spacing-6);
+    border: 1px solid var(--color-line);
+    border-radius: var(--rounded-lg);
+  }
+
+  .auth-form__rodape {
+    max-width: 440px;
+    margin: 0 auto;
+  }
+}
