@@ -1,0 +1,4 @@
+@Carango.Api_HostAddress = http://localhost:5186
+
+# Nenhum endpoint real existe ainda (story 1.1 é só scaffold).
+# Adicione requests aqui conforme os controllers forem implementados nas próximas stories.
