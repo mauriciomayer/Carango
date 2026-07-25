@@ -31,32 +31,45 @@ public class FipeVeiculoReferenciaGateway : IVeiculoReferenciaGateway
         _cache = cache;
     }
 
-    public Task<IReadOnlyList<VeiculoReferenciaItem>> ListarMarcasAsync() =>
-        _cache.GetOrCreateAsync(ChaveCacheMarcas, async entrada =>
-        {
-            entrada.AbsoluteExpirationRelativeToNow = TtlCache;
-            var marcas = await BuscarAsync<List<FipeMarcaDto>>("carros/marcas");
-            IReadOnlyList<VeiculoReferenciaItem> resultado = marcas
-                .Select(m => new VeiculoReferenciaItem(m.Codigo, m.Nome))
-                .ToList();
-            return resultado;
-        })!;
+    // achado em teste manual do usuário: IMemoryCacheExtensions.GetOrCreateAsync cria o
+    // ICacheEntry ANTES de rodar a factory e o descarta (comitando o que estiver em .Value,
+    // default = null) num finally que roda mesmo quando a factory lança — uma falha passageira
+    // da Fipe (rede, timeout) ficava "envenenada" em cache por 24h inteiras: toda tentativa
+    // seguinte falhava na hora, sem nunca tentar a Fipe de novo de verdade, e "Tentar novamente"
+    // no frontend nunca resolvia nada. Reproduzido direto: `curl .../modelos?marca=21` devolvia
+    // 503 do nosso backend enquanto a própria API da Fipe respondia 200 normalmente no mesmo
+    // instante. Troca por TryGetValue/Set manual — só entra no cache o que teve sucesso de verdade
+    public async Task<IReadOnlyList<VeiculoReferenciaItem>> ListarMarcasAsync()
+    {
+        if (_cache.TryGetValue(ChaveCacheMarcas, out IReadOnlyList<VeiculoReferenciaItem>? emCache))
+            return emCache!;
 
-    public Task<IReadOnlyList<VeiculoReferenciaItem>> ListarModelosAsync(string marcaCodigo) =>
-        _cache.GetOrCreateAsync($"fipe:modelos:{marcaCodigo}", async entrada =>
-        {
-            entrada.AbsoluteExpirationRelativeToNow = TtlCache;
-            var resposta = await BuscarAsync<FipeModelosResponseDto>($"carros/marcas/{marcaCodigo}/modelos");
-            // achado no code review: uma resposta 200 sem o campo "modelos" (formato inesperado
-            // da Fipe) desserializa Modelos como null — sem esta checagem, o .Select() abaixo
-            // lançaria ArgumentNullException fora do try/catch de BuscarAsync, escapando como
-            // 500 não controlado em vez do 503 esperado
-            if (resposta.Modelos is null) throw new VeiculoReferenciaIndisponivelException();
-            IReadOnlyList<VeiculoReferenciaItem> resultado = resposta.Modelos
-                .Select(m => new VeiculoReferenciaItem(m.Codigo.ToString(), m.Nome))
-                .ToList();
-            return resultado;
-        })!;
+        var marcas = await BuscarAsync<List<FipeMarcaDto>>("carros/marcas");
+        IReadOnlyList<VeiculoReferenciaItem> resultado = marcas
+            .Select(m => new VeiculoReferenciaItem(m.Codigo, m.Nome))
+            .ToList();
+        _cache.Set(ChaveCacheMarcas, resultado, TtlCache);
+        return resultado;
+    }
+
+    public async Task<IReadOnlyList<VeiculoReferenciaItem>> ListarModelosAsync(string marcaCodigo)
+    {
+        var chave = $"fipe:modelos:{marcaCodigo}";
+        if (_cache.TryGetValue(chave, out IReadOnlyList<VeiculoReferenciaItem>? emCache))
+            return emCache!;
+
+        var resposta = await BuscarAsync<FipeModelosResponseDto>($"carros/marcas/{marcaCodigo}/modelos");
+        // achado no code review: uma resposta 200 sem o campo "modelos" (formato inesperado
+        // da Fipe) desserializa Modelos como null — sem esta checagem, o .Select() abaixo
+        // lançaria ArgumentNullException fora do try/catch de BuscarAsync, escapando como
+        // 500 não controlado em vez do 503 esperado
+        if (resposta.Modelos is null) throw new VeiculoReferenciaIndisponivelException();
+        IReadOnlyList<VeiculoReferenciaItem> resultado = resposta.Modelos
+            .Select(m => new VeiculoReferenciaItem(m.Codigo.ToString(), m.Nome))
+            .ToList();
+        _cache.Set(chave, resultado, TtlCache);
+        return resultado;
+    }
 
     // qualquer falha ao falar com a Fipe (rede, timeout, status de erro, corpo malformado/
     // inesperado) vira VeiculoReferenciaIndisponivelException — a exceção original nunca vaza

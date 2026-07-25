@@ -2,6 +2,14 @@ namespace Carango.Domain;
 
 public class Anuncio
 {
+    // achado em teste manual do usuário: Ano não tinha NENHUMA validação de faixa aqui — só a
+    // presença era checada (ano is null). Um Ano absurdo (ex.: 1897) passava por Publicar()/
+    // AtualizarFicha() sem erro nenhum e ficava persistido num Anuncio Ativo. Mesmo piso (1990)
+    // já usado no filtro de busca (BuscaPage.tsx, ANO_MINIMO) — duplicado deliberadamente aqui
+    // porque só o Domain é a fonte de verdade de validação (AD-1); o frontend replica o mesmo
+    // valor só como UX (min/max no input), nunca a garantia real
+    private const int AnoMinimo = 1990;
+
     private readonly List<Foto> _fotos = [];
 
     public Guid Id { get; private set; }
@@ -185,5 +193,13 @@ public class Anuncio
         // checagem separada da lista acima porque a mensagem é sobre o valor, não sobre a presença
         if (preco <= 0)
             throw new ArgumentException("Preço deve ser maior que zero.", nameof(preco));
+
+        // mesmo espírito da checagem de preço acima: Ano presente mas fora de uma faixa plausível
+        // não é "campo ausente", é valor sem sentido. Teto é o ano corrente + 1 (não hardcoded) —
+        // "ano modelo" de um 0km pode ser o ano seguinte ao da venda, mesma regra já usada no
+        // filtro de busca
+        var anoMaximo = DateTime.UtcNow.Year + 1;
+        if (ano < AnoMinimo || ano > anoMaximo)
+            throw new ArgumentException($"Ano deve estar entre {AnoMinimo} e {anoMaximo}.", nameof(ano));
     }
 }

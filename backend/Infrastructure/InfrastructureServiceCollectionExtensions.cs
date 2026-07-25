@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Sockets;
 using Carango.Application;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +53,33 @@ public static class InfrastructureServiceCollectionExtensions
             // (404) em vez de https://parallelum.com.br/fipe/api/v1/carros/marcas
             client.BaseAddress = new Uri("https://parallelum.com.br/fipe/api/v1/");
             client.Timeout = TimeSpan.FromSeconds(5);
+        })
+        // achado em teste manual do usuário, isolado com um projeto de diagnóstico à parte:
+        // parallelum.com.br fica atrás da Cloudflare e o DNS devolve tanto endereços IPv6 quanto
+        // IPv4 — o caminho IPv6 está sem rota nesta rede (confirmado com `curl -6`, trava; `curl
+        // -4`, responde em <1s). SocketsHttpHandler tenta IPv6 primeiro e nunca recua a tempo pro
+        // IPv4 (o fallback "Happy Eyeballs" do .NET não age rápido o bastante aqui), então toda
+        // chamada trava até o Timeout configurado acima. curl não é afetado porque já prioriza
+        // IPv4 nesta máquina. ConnectCallback força a resolução só em IPv4, contornando o
+        // problema sem depender de rota IPv6 nenhuma — mitigação padrão pra este cenário
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            ConnectCallback = async (contexto, cancellationToken) =>
+            {
+                var enderecos = await Dns.GetHostAddressesAsync(
+                    contexto.DnsEndPoint.Host, AddressFamily.InterNetwork, cancellationToken);
+                var socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+                try
+                {
+                    await socket.ConnectAsync(enderecos[0], contexto.DnsEndPoint.Port, cancellationToken);
+                    return new NetworkStream(socket, ownsSocket: true);
+                }
+                catch
+                {
+                    socket.Dispose();
+                    throw;
+                }
+            },
         });
 
         return services;
