@@ -9,7 +9,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.4-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
-[![Tests](https://img.shields.io/badge/backend%20tests-307%20passing-2ea44f?style=flat-square)](#-testes)
+[![Tests](https://img.shields.io/badge/backend%20tests-316%20passing-2ea44f?style=flat-square)](#-testes)
+[![E2E](https://img.shields.io/badge/e2e-Playwright-2ea44f?style=flat-square&logo=playwright)](#-testes)
 [![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=flat-square)](#-status-do-projeto)
 
 </div>
@@ -97,7 +98,7 @@ Decisões arquiteturais relevantes (documentadas por completo em [`ARCHITECTURE-
 | **Backend** | .NET 10 / ASP.NET Core · Entity Framework Core 9 · Pomelo.EntityFrameworkCore.MySql · JWT Bearer Auth |
 | **Banco de dados** | MySQL 8.4 |
 | **Frontend** | React 19 · TypeScript · Vite 8 |
-| **Testes** | xUnit v3 · Shouldly · `Microsoft.AspNetCore.Mvc.Testing` (testes de integração via `WebApplicationFactory`) |
+| **Testes** | xUnit v3 · Shouldly · `Microsoft.AspNetCore.Mvc.Testing` (backend) · Vitest + Testing Library (unidade de frontend) · Playwright (E2E de navegador) |
 | **Integrações externas** | API pública da Fipe (marca/modelo) · dataset estático do IBGE (estado/cidade) |
 
 ## 📂 Estrutura do projeto
@@ -186,7 +187,24 @@ cd backend/Tests/Carango.Tests
 dotnet test
 ```
 
-307 testes (unidade + integração) cobrindo Domain, Application e Api. O frontend ainda não tem suíte de testes automatizados — ver [Decisões técnicas e débito conhecido](#-decisões-técnicas-e-débito-conhecido).
+316 testes (unidade + integração) cobrindo Domain, Application e Api.
+
+```bash
+cd frontend
+npm run test        # Vitest — roda uma vez (CI)
+npm run test:watch  # Vitest — modo interativo
+```
+
+Vitest + React Testing Library (Story 5.1) — cobertura ainda parcial (começou pelo `ComboboxCascata`, o componente mais reutilizado do projeto); ver [Decisões técnicas e débito conhecido](#-decisões-técnicas-e-débito-conhecido).
+
+```bash
+cd frontend
+npx playwright install   # só na primeira vez, baixa o Chromium
+npm run e2e               # roda a suíte headless
+npm run e2e:ui             # roda em modo interativo (Playwright UI)
+```
+
+Playwright — sobe um navegador de verdade contra o app rodando (backend + frontend precisam estar de pé; `BASE_URL`/`API_URL` são configuráveis via `.env`, ver `frontend/.env.example`). Cobre catálogo público, integração com a Fipe (Marca → Modelo), dataset do IBGE (Estado → Cidade) e o fluxo autenticado de criação de Anúncio — nasceu diretamente de bugs reais encontrados em teste manual, para não regredir.
 
 ## 📊 Status do projeto
 
@@ -198,8 +216,9 @@ Desenvolvimento conduzido por epics/stories, com retrospectiva ao final de cada 
 | 2 — Gestão de Anúncios | ✅ Concluído | 8/8 |
 | 3 — Busca e Descoberta | Em andamento | 7/8 (contato Comprador-Vendedor bloqueado por decisão de negócio em aberto) |
 | 4 — Monetização e Painel do Lojista | ✅ Concluído | 5/5 |
+| 5 — Qualidade (Infraestrutura de Testes do Frontend) | Em andamento | 1/1 |
 
-23 stories entregues no total. Os 2 itens em backlog estão bloqueados por decisões externas ao time de desenvolvimento (credenciais de OAuth reais e definição do canal de contato com o vendedor), não por falta de implementação.
+24 stories entregues no total. Os 2 itens em backlog na Epic 1/3 estão bloqueados por decisões externas ao time de desenvolvimento (credenciais de OAuth reais e definição do canal de contato com o vendedor), não por falta de implementação. Inventário completo do que está pendente — incluindo ações de retrospectiva ainda abertas — em [`pendencias.md`](_bmad-output/planning-artifacts/pendencias.md).
 
 ## 🧭 Decisões técnicas e débito conhecido
 
@@ -207,7 +226,7 @@ Documentar o que ainda não está pronto é parte da arquitetura deste projeto, 
 
 - **Storage de fotos em disco local** — implementação interina (`IMediaStorage`/`LocalDiskMediaStorage`) enquanto um provedor definitivo (S3, Azure Blob, MinIO) não é escolhido. A interface já isola essa troca sem tocar em Domain/Application.
 - **Gateway de pagamento mockado** — `MockBillingGateway` sempre aprova a cobrança; a integração real depende de o cliente escolher o gateway (Stripe, Mercado Pago, PagSeguro etc.).
-- **Sem testes automatizados de frontend** — cobertura de UI hoje é build limpo (`tsc`/`vite build`) + revisão de código; Vitest/Testing Library é um item em aberto.
+- **Testes automatizados de frontend ainda parciais** — Vitest + Testing Library (Story 5.1, cobrindo hoje só o `ComboboxCascata`) e uma suíte Playwright de E2E (5 cenários, focados nos bugs já corrigidos) estão configurados e rodando; expandir cobertura pros demais componentes/formulários e fluxos (edição de Anúncio, painel do lojista, assinatura) é trabalho contínuo, não um item "fechado". Nenhum dos dois roda em CI ainda — só local.
 - **Corrida de concorrência (lost-update)** em fluxos de check-then-mutate-then-persist (destacar Anúncio, assinar plano) — sem token de concorrência otimista ainda; mapeado como ação de arquitetura para antes de qualquer integração de cobrança real.
 - **Sem infraestrutura de logging estruturado** no backend.
 

@@ -1,4 +1,5 @@
 import { obterToken } from '../autenticacao/authStorage'
+import { tratarSessaoExpirada } from '../../shared/sessaoAutenticada'
 import type { AnuncioResponse, ProblemDetails } from './types'
 
 export class AnuncioApiError extends Error {
@@ -10,6 +11,20 @@ export class AnuncioApiError extends Error {
     super(problema.detail ?? problema.title ?? 'Não foi possível concluir a operação. Tente novamente.')
     this.problema = problema
   }
+}
+
+// achado em teste manual do usuário: extraído depois de virar a 8ª repetição do mesmo bloco
+// if (!resposta.ok) {...} neste arquivo — também é o único lugar que precisa saber de 401
+// (sessão expirada, ver sessaoAutenticada.ts), então centralizar aqui evita repetir a checagem
+// em cada uma das 8 funções que chamam fetch
+async function lancarSeErro(resposta: Response): Promise<void> {
+  if (resposta.ok) return
+  // achado no code review: page está recarregando (tratarSessaoExpirada dispara o reload) —
+  // uma Promise que nunca resolve evita que o chamador chegue a renderizar um erro que vai
+  // sumir da tela no instante seguinte de qualquer jeito
+  if (tratarSessaoExpirada(resposta)) return new Promise(() => {})
+  const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
+  throw new AnuncioApiError(problema)
 }
 
 export interface CriarAnuncioParams {
@@ -42,10 +57,7 @@ export async function listarMeusAnuncios(): Promise<AnuncioResponse[]> {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   })
 
-  if (!resposta.ok) {
-    const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
-    throw new AnuncioApiError(problema)
-  }
+  await lancarSeErro(resposta)
 
   return (await resposta.json()) as AnuncioResponse[]
 }
@@ -56,10 +68,7 @@ export async function obterAnuncio(id: string): Promise<AnuncioResponse> {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   })
 
-  if (!resposta.ok) {
-    const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
-    throw new AnuncioApiError(problema)
-  }
+  await lancarSeErro(resposta)
 
   return (await resposta.json()) as AnuncioResponse
 }
@@ -75,10 +84,7 @@ export async function editarAnuncio(id: string, params: EditarAnuncioParams): Pr
     body: JSON.stringify(params),
   })
 
-  if (!resposta.ok) {
-    const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
-    throw new AnuncioApiError(problema)
-  }
+  await lancarSeErro(resposta)
 
   return (await resposta.json()) as AnuncioResponse
 }
@@ -92,10 +98,7 @@ async function postAcaoAnuncio(id: string, acao: string): Promise<AnuncioRespons
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   })
 
-  if (!resposta.ok) {
-    const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
-    throw new AnuncioApiError(problema)
-  }
+  await lancarSeErro(resposta)
 
   return (await resposta.json()) as AnuncioResponse
 }
@@ -123,10 +126,7 @@ export async function excluirAnuncio(id: string): Promise<void> {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   })
 
-  if (!resposta.ok) {
-    const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
-    throw new AnuncioApiError(problema)
-  }
+  await lancarSeErro(resposta)
 
   // 204 No Content — sem corpo de resposta pra parsear
 }
@@ -146,10 +146,7 @@ export async function adicionarFotosAnuncio(id: string, fotos: File[]): Promise<
     body: formData,
   })
 
-  if (!resposta.ok) {
-    const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
-    throw new AnuncioApiError(problema)
-  }
+  await lancarSeErro(resposta)
 
   return (await resposta.json()) as AnuncioResponse
 }
@@ -161,10 +158,7 @@ export async function removerFotoAnuncio(id: string, fotoId: string): Promise<An
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   })
 
-  if (!resposta.ok) {
-    const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
-    throw new AnuncioApiError(problema)
-  }
+  await lancarSeErro(resposta)
 
   return (await resposta.json()) as AnuncioResponse
 }
@@ -193,10 +187,7 @@ export async function criarAnuncio(params: CriarAnuncioParams): Promise<AnuncioR
     body: formData,
   })
 
-  if (!resposta.ok) {
-    const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
-    throw new AnuncioApiError(problema)
-  }
+  await lancarSeErro(resposta)
 
   return (await resposta.json()) as AnuncioResponse
 }

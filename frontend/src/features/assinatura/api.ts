@@ -1,4 +1,5 @@
 import { obterToken } from '../autenticacao/authStorage'
+import { tratarSessaoExpirada } from '../../shared/sessaoAutenticada'
 import type { PlanoLojistaResponse, ProblemDetails } from './types'
 
 export class AssinaturaApiError extends Error {
@@ -8,6 +9,16 @@ export class AssinaturaApiError extends Error {
     super(problema.detail ?? problema.title ?? 'Não foi possível concluir a operação. Tente novamente.')
     this.problema = problema
   }
+}
+
+// achado em teste manual do usuário: mesma extração de anuncios/api.ts (401 = sessão expirada,
+// ver sessaoAutenticada.ts) — não inclui o caso 404, que os dois chamadores tratam de forma
+// diferente entre si (obterMeuPlano trata como resultado válido, cancelarPlanoLojista como erro)
+async function lancarSeErro(resposta: Response): Promise<void> {
+  if (resposta.ok) return
+  if (tratarSessaoExpirada(resposta)) return new Promise(() => {})
+  const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
+  throw new AssinaturaApiError(problema)
 }
 
 // null é um resultado válido aqui (Vendedor nunca assinou um Plano Lojista), não um erro — mesmo
@@ -21,10 +32,7 @@ export async function obterMeuPlano(): Promise<PlanoLojistaResponse | null> {
 
   if (resposta.status === 404) return null
 
-  if (!resposta.ok) {
-    const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
-    throw new AssinaturaApiError(problema)
-  }
+  await lancarSeErro(resposta)
 
   return (await resposta.json()) as PlanoLojistaResponse
 }
@@ -36,10 +44,7 @@ export async function cancelarPlanoLojista(): Promise<PlanoLojistaResponse> {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   })
 
-  if (!resposta.ok) {
-    const problema = (await resposta.json().catch(() => ({}))) as ProblemDetails
-    throw new AssinaturaApiError(problema)
-  }
+  await lancarSeErro(resposta)
 
   return (await resposta.json()) as PlanoLojistaResponse
 }

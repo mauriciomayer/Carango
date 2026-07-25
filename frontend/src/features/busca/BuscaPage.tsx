@@ -16,6 +16,26 @@ import { listarEstados, listarMunicipios } from '../../shared/ibgeLocalidades'
 // última página buscada veio "cheia" (pode haver mais) ou "incompleta" (fim de lista, Story 3.4)
 const TAMANHO_PAGINA = 20
 
+// piso do filtro Ano — decisão de produto (não técnica): não baixar sem confirmação explícita
+const ANO_MINIMO = 1990
+
+// filtro de Preço em faixas prontas (aprovado em preview interativo pelo Mauricio) — substitui
+// os antigos campos numéricos livres, onde "Até" podia ficar menor que "De" sem nenhum aviso e a
+// busca simplesmente não retornava nada. 0 é a opção sintética "Qualquer valor" (equivalente a
+// não filtrar); os demais valores vêm da distribuição real dos preços já cadastrados na base
+// (R$ 42.900 a R$ 150.000 no momento do desenho), com uma faixa a mais (200 mil) de folga
+const FAIXAS_PRECO = [0, 25000, 50000, 75000, 100000, 125000, 150000, 200000]
+
+const FORMATADOR_FAIXA_PRECO = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  maximumFractionDigits: 0,
+})
+
+function rotuloFaixaPreco(valor: number): string {
+  return valor === 0 ? 'Qualquer valor' : FORMATADOR_FAIXA_PRECO.format(valor)
+}
+
 // opções sintéticas de "limpar campo" pros ComboboxCascata de Marca/Modelo (Story 3.7) e
 // Estado/Cidade (Story 3.8) — achado no code review: valores constantes que nunca dependem de
 // props/state, sem motivo pra recriar o objeto a cada render
@@ -344,6 +364,25 @@ export function BuscaPage({ autenticado, tituloPainel, onEntrar, onMeusAnuncios,
     setFiltros((atual) => ({ ...atual, [campo]: valor }))
   }
 
+  // Preço em faixas (aprovado em preview) — "0" é a opção sintética "Qualquer valor", vira
+  // string vazia no filtro (mesmo significado de "não aplicar esse filtro" já usado no resto do
+  // formulário). Subir "De" além do "Até" já escolhido leva o "Até" junto — nunca deixa a
+  // combinação inconsistente, em vez de só impedir via UI (o <select> de Até também filtra as
+  // opções abaixo de "De", ver renderização; os dois mecanismos juntos garantem a regra mesmo
+  // se um dia o valor vier de outro lugar, ex. deep link)
+  function aoAlterarPrecoMin(valor: string) {
+    const novoMin = Number(valor)
+    setFiltros((atual) => {
+      const maxAtual = Number(atual.precoMax || 0)
+      const precoMax = maxAtual !== 0 && maxAtual < novoMin ? valor : atual.precoMax
+      return { ...atual, precoMin: novoMin === 0 ? '' : valor, precoMax }
+    })
+  }
+
+  function aoAlterarPrecoMax(valor: string) {
+    aoAlterarCampo('precoMax', Number(valor) === 0 ? '' : valor)
+  }
+
   // Diferente do grid de filtros de campo (só aplica ao clicar em "Buscar"), a ordenação
   // dispara a busca imediatamente — reflete a expectativa comum de "ordenar" em marketplaces
   // e a própria AC #1 da Story 3.2 ("escolho ordenar... então são reordenados")
@@ -415,6 +454,12 @@ export function BuscaPage({ autenticado, tituloPainel, onEntrar, onMeusAnuncios,
                 value={filtros.ano}
                 onChange={(e) => aoAlterarCampo('ano', e.target.value)}
                 placeholder="Todos"
+                // achado do usuário em teste manual: sem min/max, o spinner do navegador conta a
+                // partir de 0/1 — ANO_MINIMO é um piso deliberado (1990), não abaixar sem decisão
+                // explícita do PO; máximo calculado (não hardcoded) para não ficar defasado —
+                // "ano modelo" de um 0km pode ser o ano seguinte ao da venda
+                min={ANO_MINIMO}
+                max={new Date().getFullYear() + 1}
               />
             </label>
             <label className="search-filters__item">
@@ -429,20 +474,33 @@ export function BuscaPage({ autenticado, tituloPainel, onEntrar, onMeusAnuncios,
             <div className="search-filters__item search-filters__item--preco">
               <span className="search-filters__rotulo">Preço</span>
               <div className="search-filters__faixa">
-                <input
-                  type="number"
-                  value={filtros.precoMin}
-                  onChange={(e) => aoAlterarCampo('precoMin', e.target.value)}
-                  placeholder="De"
+                <select
+                  value={filtros.precoMin || 0}
+                  onChange={(e) => aoAlterarPrecoMin(e.target.value)}
                   aria-label="Preço mínimo"
-                />
-                <input
-                  type="number"
-                  value={filtros.precoMax}
-                  onChange={(e) => aoAlterarCampo('precoMax', e.target.value)}
-                  placeholder="Até"
+                >
+                  {FAIXAS_PRECO.map((valor) => (
+                    <option key={valor} value={valor}>
+                      {rotuloFaixaPreco(valor)}
+                    </option>
+                  ))}
+                </select>
+                <span className="search-filters__faixa-marcador">até</span>
+                <select
+                  value={filtros.precoMax || 0}
+                  onChange={(e) => aoAlterarPrecoMax(e.target.value)}
                   aria-label="Preço máximo"
-                />
+                >
+                  {/* "Até" nunca oferece valor menor que "De" (além de 0/Qualquer, sempre válido
+                      por definição) — garante a regra na própria UI, não só no handler acima */}
+                  {FAIXAS_PRECO.filter((valor) => valor === 0 || valor >= Number(filtros.precoMin || 0)).map(
+                    (valor) => (
+                      <option key={valor} value={valor}>
+                        {rotuloFaixaPreco(valor)}
+                      </option>
+                    ),
+                  )}
+                </select>
               </div>
             </div>
             <ComboboxCascata

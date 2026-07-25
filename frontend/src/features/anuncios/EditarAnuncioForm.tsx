@@ -35,13 +35,18 @@ const estadoVazio: FormState = {
 }
 
 // Marca/Modelo (Story 2.6) e Estado/Cidade (Story 2.7) saíram deste array genérico — viram
-// ComboboxCascata, renderizado explicitamente antes deste map. Os outros 4 campos continuam texto livre
-const CAMPOS: ReadonlyArray<readonly [Exclude<keyof FormState, 'marca' | 'modelo' | 'estado' | 'cidade'>, string, 'text' | 'number']> = [
+// ComboboxCascata, renderizado explicitamente antes deste map. Descrição saiu também (achado em
+// teste manual do usuário — precisa de <textarea>, multi-linha, não cabe no <input> genérico
+// abaixo). Os 3 campos restantes continuam texto/número livre
+const CAMPOS: ReadonlyArray<readonly [Exclude<keyof FormState, 'marca' | 'modelo' | 'estado' | 'cidade' | 'descricao'>, string, 'text' | 'number']> = [
   ['ano', 'Ano', 'number'],
   ['versao', 'Versão', 'text'],
   ['preco', 'Preço', 'number'],
-  ['descricao', 'Descrição', 'text'],
 ]
+
+// mesmo piso já usado no filtro de busca (BuscaPage.tsx, ANO_MINIMO) — a garantia real vive no
+// Domain (Anuncio.ValidarCamposObrigatorios); isto aqui é só UX (falha rápido, antes do round-trip)
+const ANO_MINIMO = 1990
 
 interface EditarAnuncioFormProps {
   anuncioId: string
@@ -635,6 +640,9 @@ export function EditarAnuncioForm({ anuncioId, tituloVoltar = 'Meus Anúncios', 
               onChange={(evento) => atualizarCampo(campo, evento.target.value)}
               aria-invalid={Boolean(erro)}
               aria-describedby={erro ? `${id}-erro` : undefined}
+              // achado em teste manual do usuário: sem isso o campo aceitava qualquer Ano (ex.
+              // 1897) e salvava — a garantia real fica no backend (Domain), isto é só UX
+              {...(campo === 'ano' ? { min: ANO_MINIMO, max: new Date().getFullYear() + 1 } : {})}
             />
             {erro && (
               <span id={`${id}-erro`} className="auth-form__erro-campo" role="alert">
@@ -644,6 +652,25 @@ export function EditarAnuncioForm({ anuncioId, tituloVoltar = 'Meus Anúncios', 
           </div>
         )
       })}
+
+      {/* achado em teste manual do usuário: Descrição precisa comportar texto de verdade
+          (parágrafos), não uma linha só — <textarea> no lugar do <input type="text"> genérico */}
+      <div className="auth-form__campo">
+        <label htmlFor={descricaoId}>Descrição</label>
+        <textarea
+          id={descricaoId}
+          rows={4}
+          value={form.descricao}
+          onChange={(evento) => atualizarCampo('descricao', evento.target.value)}
+          aria-invalid={Boolean(errosCampo.descricao)}
+          aria-describedby={errosCampo.descricao ? `${descricaoId}-erro` : undefined}
+        />
+        {errosCampo.descricao && (
+          <span id={`${descricaoId}-erro`} className="auth-form__erro-campo" role="alert">
+            {errosCampo.descricao}
+          </span>
+        )}
+      </div>
 
       <ComboboxCascata
         id={estadoId}

@@ -113,12 +113,69 @@
   margin: 0;
 }
 
+/* Ficha técnica + Sobre este veículo — enriquecimento pra demonstração ao cliente (padrão
+   Webmotors/OLX: specs organizadas antes da descrição corrida, não só uma linha de meta) */
+.anuncio-detalhe__secao-titulo {
+  font-size: var(--font-micro-label-size);
+  font-weight: var(--font-micro-label-weight);
+  letter-spacing: var(--font-micro-label-tracking);
+  text-transform: uppercase;
+  color: var(--color-grey);
+  margin: 0;
+}
+
+.anuncio-detalhe__ficha {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-3);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--color-line);
+}
+
+.anuncio-detalhe__ficha-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-3);
+}
+
+.anuncio-detalhe__ficha-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.anuncio-detalhe__ficha-rotulo {
+  font-size: 9px;
+  letter-spacing: var(--font-micro-label-tracking);
+  text-transform: uppercase;
+  color: var(--color-grey);
+  margin: 0;
+}
+
+.anuncio-detalhe__ficha-valor {
+  font-size: var(--font-body-size);
+  font-weight: 600;
+  color: var(--color-ink-900);
+  margin: 0;
+}
+
+.anuncio-detalhe__sobre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-3);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--color-line);
+}
+
 .anuncio-detalhe__descricao {
   font-size: var(--font-body-size);
   line-height: var(--font-body-line-height);
   color: var(--color-ink-900);
   white-space: pre-line;
-  margin: var(--spacing-2) 0 0;
+  margin: 0;
 }
 
 /* Desktop (1024px+) — galeria e ficha lado a lado, padrão clássico de página de produto, em vez

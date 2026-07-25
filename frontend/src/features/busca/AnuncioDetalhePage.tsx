@@ -113,6 +113,18 @@ export function AnuncioDetalhePage({ anuncioId, onVoltar }: AnuncioDetalhePagePr
   }
 
   const meta = metaDoAnuncio(anuncio)
+  const localizacao = [anuncio.cidade, anuncio.estado].filter(Boolean).join('/')
+
+  // "Ficha técnica" — só campos que o Anuncio realmente guarda (Marca/Modelo/Versão/Ano/Localização).
+  // Deliberadamente sem quilometragem/câmbio/combustível/selo de "verificado" — nenhum desses
+  // existe no modelo de dados hoje, e simular um deles enganaria quem está olhando o anúncio
+  const fichaTecnica = [
+    { rotulo: 'Marca', valor: anuncio.marca },
+    { rotulo: 'Modelo', valor: anuncio.modelo },
+    { rotulo: 'Versão', valor: anuncio.versao },
+    { rotulo: 'Ano', valor: anuncio.ano?.toString() ?? null },
+    { rotulo: 'Localização', valor: localizacao || null },
+  ].filter((item): item is { rotulo: string; valor: string } => Boolean(item.valor))
 
   return (
     <div className="anuncio-detalhe">
@@ -131,7 +143,27 @@ export function AnuncioDetalhePage({ anuncioId, onVoltar }: AnuncioDetalhePagePr
             </p>
           )}
           {meta && <p className="anuncio-detalhe__meta">{meta}</p>}
-          {anuncio.descricao && <p className="anuncio-detalhe__descricao">{anuncio.descricao}</p>}
+
+          {fichaTecnica.length > 0 && (
+            <div className="anuncio-detalhe__ficha">
+              <p className="anuncio-detalhe__secao-titulo">Ficha técnica</p>
+              <dl className="anuncio-detalhe__ficha-grid">
+                {fichaTecnica.map((item) => (
+                  <div className="anuncio-detalhe__ficha-item" key={item.rotulo}>
+                    <dt className="anuncio-detalhe__ficha-rotulo">{item.rotulo}</dt>
+                    <dd className="anuncio-detalhe__ficha-valor">{item.valor}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
+
+          {anuncio.descricao && (
+            <div className="anuncio-detalhe__sobre">
+              <p className="anuncio-detalhe__secao-titulo">Sobre este veículo</p>
+              <p className="anuncio-detalhe__descricao">{anuncio.descricao}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -170,9 +170,38 @@
   color: var(--color-ink-muted);
 }
 
-.search-filters__faixa input {
-  width: 50%;
+/* Preço em faixas prontas (aprovado em preview interativo) — <select> no lugar dos antigos
+   <input type="number"> livres. appearance:none + o par de gradientes abaixo desenha uma seta
+   dupla dourada, porque a seta nativa do navegador não segue a paleta escura do formulário */
+.search-filters__faixa select {
+  flex: 1;
   min-width: 0;
+  appearance: none;
+  border: none;
+  background-color: transparent;
+  outline: none;
+  font-family: var(--font-family-base);
+  font-size: var(--font-meta-size);
+  font-weight: 600;
+  color: var(--color-paper);
+  padding: 0 14px 0 0;
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-gold) 50%),
+    linear-gradient(135deg, var(--color-gold) 50%, transparent 50%);
+  background-position:
+    right 4px top 55%,
+    right 0 top 55%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.search-filters__faixa select option {
+  color: var(--color-ink-900);
+}
+
+.search-filters__faixa-marcador {
+  font-size: var(--font-meta-size);
+  color: var(--color-ink-muted);
+  flex: none;
 }
 
 /* mobile-first: os dois botões empilhados, full-width — mesmo visual que "Buscar" sozinho já
