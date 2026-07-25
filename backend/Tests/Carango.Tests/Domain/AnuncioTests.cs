@@ -83,6 +83,49 @@ public class AnuncioTests
         anuncio.Status.ShouldBe(StatusAnuncio.Rascunho);
     }
 
+    // achado em teste manual do usuário: Ano não tinha faixa validada — 1897 (ou qualquer outro
+    // valor absurdo) passava por Publicar() sem erro nenhum e ficava persistido
+    [Theory]
+    [InlineData(1897)]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Publicar_ComAnoForaDaFaixaPlausivel_LancaArgumentExceptionEPermaneceRascunho(int ano)
+    {
+        var anuncio = Anuncio.CriarRascunho(
+            VendedorId, marca: "Honda", modelo: "Civic", ano: ano, versao: "EXL",
+            preco: 95000m, descricao: "Único dono", estado: "SP", cidade: "São Paulo");
+
+        Should.Throw<ArgumentException>(() => anuncio.Publicar());
+
+        anuncio.Status.ShouldBe(StatusAnuncio.Rascunho);
+    }
+
+    [Fact]
+    public void Publicar_ComAnoUmAnoAlemDoAtual_NaoLancaNada()
+    {
+        // "ano modelo" de um 0km pode ser o ano seguinte ao da venda — teto não pode ser o ano
+        // corrente exato, senão bloquearia um caso legítimo e comum de mercado
+        var anuncio = Anuncio.CriarRascunho(
+            VendedorId, marca: "Honda", modelo: "Civic", ano: DateTime.UtcNow.Year + 1, versao: "EXL",
+            preco: 95000m, descricao: "Único dono", estado: "SP", cidade: "São Paulo");
+
+        Should.NotThrow(() => anuncio.Publicar());
+
+        anuncio.Status.ShouldBe(StatusAnuncio.Ativo);
+    }
+
+    [Fact]
+    public void Publicar_ComAnoMuitoAlemDoAtual_LancaArgumentException()
+    {
+        var anuncio = Anuncio.CriarRascunho(
+            VendedorId, marca: "Honda", modelo: "Civic", ano: DateTime.UtcNow.Year + 5, versao: "EXL",
+            preco: 95000m, descricao: "Único dono", estado: "SP", cidade: "São Paulo");
+
+        Should.Throw<ArgumentException>(() => anuncio.Publicar());
+
+        anuncio.Status.ShouldBe(StatusAnuncio.Rascunho);
+    }
+
     [Fact]
     public void Publicar_QuandoJaEstaAtivo_LancaInvalidOperationException()
     {
@@ -156,6 +199,24 @@ public class AnuncioTests
 
         anuncio.Marca.ShouldBe("Honda");
         anuncio.Preco.ShouldBe(95000m);
+    }
+
+    // reproduz exatamente o bug relatado pelo usuário: editar (não só publicar) um Anuncio já
+    // Ativo com um Ano fora da faixa também precisa ser rejeitado — era este o caminho que
+    // deixava 1897 passar batido e ser persistido de verdade
+    [Fact]
+    public void AtualizarFicha_EmAtivoComAnoForaDaFaixaPlausivel_LancaArgumentExceptionENaoAlteraNada()
+    {
+        var anuncio = Anuncio.CriarRascunho(
+            VendedorId, marca: "Honda", modelo: "Civic", ano: 2019, versao: "EXL",
+            preco: 95000m, descricao: "Único dono", estado: "SP", cidade: "São Paulo");
+        anuncio.Publicar();
+
+        Should.Throw<ArgumentException>(() =>
+            anuncio.AtualizarFicha("Fiat", "Toro", 1897, "Freedom", 110000m, "Revisado", "SP", "Sorocaba"));
+
+        anuncio.Marca.ShouldBe("Honda");
+        anuncio.Ano.ShouldBe(2019);
     }
 
     private static Anuncio CriarAtivo()

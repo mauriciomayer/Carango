@@ -99,4 +99,63 @@ public class FipeVeiculoReferenciaGatewayTests
 
         await Should.ThrowAsync<VeiculoReferenciaIndisponivelException>(() => gateway.ListarMarcasAsync());
     }
+
+    // achado em teste manual do usuário: reproduzido direto contra a Fipe real (curl no mesmo
+    // instante confirmou a API respondendo 200 enquanto o nosso endpoint devolvia 503) — uma
+    // falha passageira ficava "envenenada" em cache por 24h (TtlCache), porque
+    // IMemoryCacheExtensions.GetOrCreateAsync comita o ICacheEntry mesmo quando a factory lança.
+    // Este teste prova que uma falha NÃO fica em cache: uma tentativa que funciona depois de uma
+    // que falhou tem que ter sucesso, não repetir a mesma exceção
+    [Fact]
+    public async Task ListarModelosAsync_ApósUmaFalhaPassageira_UmaNovaTentativaConsultaAFipeDeNovoEFunciona()
+    {
+        var (gateway, handler) = CriarGateway();
+        handler.StatusCode = HttpStatusCode.NotFound;
+
+        await Should.ThrowAsync<VeiculoReferenciaIndisponivelException>(() => gateway.ListarModelosAsync("21"));
+
+        handler.StatusCode = HttpStatusCode.OK;
+        handler.Corpo = """{"modelos":[{"codigo":437,"nome":"147 C/ CL"}]}""";
+
+        var resultado = await gateway.ListarModelosAsync("21");
+
+        resultado.ShouldHaveSingleItem();
+        resultado[0].Nome.ShouldBe("147 C/ CL");
+    }
+
+    [Fact]
+    public async Task ListarMarcasAsync_ApósUmaFalhaPassageira_UmaNovaTentativaConsultaAFipeDeNovoEFunciona()
+    {
+        var (gateway, handler) = CriarGateway();
+        handler.StatusCode = HttpStatusCode.NotFound;
+
+        await Should.ThrowAsync<VeiculoReferenciaIndisponivelException>(() => gateway.ListarMarcasAsync());
+
+        handler.StatusCode = HttpStatusCode.OK;
+        handler.Corpo = """[{"codigo":"59","nome":"VW - VolksWagen"}]""";
+
+        var resultado = await gateway.ListarMarcasAsync();
+
+        resultado.ShouldHaveSingleItem();
+        resultado[0].Nome.ShouldBe("VW - VolksWagen");
+    }
+
+    // achado no code review — não basta uma tentativa depois de falha funcionar; um sucesso
+    // subsequente também precisa vir do cache (não gastar 2 requisições HTTP pra 2 chamadas
+    // idênticas), senão o Set manual introduzido pelo fix poderia ter substituído o cache real
+    // por um no-op disfarçado
+    [Fact]
+    public async Task ListarModelosAsync_ChamadoDuasVezesComSucesso_SoConsultaAFipeUmaVez()
+    {
+        var (gateway, handler) = CriarGateway();
+        handler.Corpo = """{"modelos":[{"codigo":5585,"nome":"AMAROK"}]}""";
+
+        await gateway.ListarModelosAsync("59");
+        handler.Corpo = """{"modelos":[{"codigo":9999,"nome":"OUTRO"}]}""";
+        var segundaChamada = await gateway.ListarModelosAsync("59");
+
+        // se a segunda chamada tivesse ido à rede de novo, viria "OUTRO" (o corpo mudou) — vindo
+        // do cache, continua "AMAROK" (o valor da primeira chamada, nunca re-consultado)
+        segundaChamada[0].Nome.ShouldBe("AMAROK");
+    }
 }
